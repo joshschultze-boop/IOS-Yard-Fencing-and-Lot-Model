@@ -71,7 +71,7 @@ def site_and_layout_inputs(saved_inputs):
             min_value=0.0,
             value=float(saved_site["slanted_side_length_ft"]),
             step=1.0,
-            help="Enter zero to turn off the extra-perimeter allowance.",
+            help="Enter zero to turn off the extra-perimeter allowance. This is for parallelogram lots only!",
         )
 
     with column_2:
@@ -263,7 +263,7 @@ def rent_inputs(saved_inputs):
         "and yards between the breakpoints follow the curve shown below."
     )
 
-    column_1, column_2 = st.columns(2)
+    column_1, column_2, column_3 = st.columns(3)
 
     with column_1:
         st.markdown("#### Small-yard breakpoint")
@@ -297,11 +297,21 @@ def rent_inputs(saved_inputs):
             step=100.0,
         )
 
+    with column_3:
+        st.markdown("#### Scale function")
+        scale_function = st.selectbox(
+            "Scale function",
+            options=["Linear", "Quadratic", "Exponential", "Logistic"],
+            index=["Linear", "Quadratic", "Exponential", "Logistic"].index(saved_rent.get("scale_function", "Linear")),
+        )
+        st.markdown('###### ^ Note that the logistic function midpoint and steepness are hard-coded ^')
+
     rent = {
         "small_yard_breakpoint_acres": small_size,
         "small_yard_rent_per_acre": small_rent,
         "large_yard_breakpoint_acres": large_size,
         "large_yard_rent_per_acre": large_rent,
+        "scale_function": scale_function,
     }
 
     if small_size < large_size:
@@ -550,11 +560,11 @@ def main():
 
     tabs = st.tabs(
         [
-            "Site & layout",
-            "Costs & valuation",
+            "Site & Layout",
+            "Costs & Valuation",
             "Rent curve",
-            "Additional yards",
-            "Scenario ranges",
+            "Additional Yards",
+            "Scenario Ranges",
         ]
     )
 

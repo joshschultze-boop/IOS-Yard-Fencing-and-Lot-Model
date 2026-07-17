@@ -20,7 +20,7 @@ def square_feet_to_acres(square_feet):
     return square_feet / ACRE_TO_SQFT
 
 
-def rent_per_acre(yard_size_acres, rent_inputs):
+def rent_per_acre(yard_size_acres, rent_inputs, scale_function=None):
     """Assign monthly rent per acre from the two size breakpoints.
 
     The price is fixed outside the breakpoints.  Between them, the price
@@ -32,6 +32,8 @@ def rent_per_acre(yard_size_acres, rent_inputs):
     small_rent = rent_inputs["small_yard_rent_per_acre"]
     large_size = rent_inputs["large_yard_breakpoint_acres"]
     large_rent = rent_inputs["large_yard_rent_per_acre"]
+    if scale_function is None:
+        scale_function = rent_inputs.get("scale_function", "Linear")
 
     if yard_size_acres <= small_size:
         return small_rent
@@ -42,7 +44,48 @@ def rent_per_acre(yard_size_acres, rent_inputs):
     size_position = (yard_size_acres - small_size) / (large_size - small_size)
     rent_difference = small_rent - large_rent
 
-    return large_rent + rent_difference * (1 - size_position**2)
+    if scale_function == "Linear":
+        return large_rent + rent_difference * (1 - size_position)
+    elif scale_function == "Quadratic":
+        return large_rent + rent_difference * (1 - size_position**2)
+    elif scale_function == "Exponential":
+        return large_rent + (rent_difference * (1 - math.exp(size_position - 1))) / (1-math.exp(-1))
+    elif scale_function == "Logistic":
+        steepness = 8.0
+        midpoint = 0.5
+
+        # Decreasing logistic function.
+        raw_value = 1 / (
+             1 + math.exp(
+                steepness * (size_position - midpoint)
+            )
+        )
+
+        # Calculate its values at the two breakpoints.
+        raw_at_small_breakpoint = 1 / (
+             1 + math.exp(
+                steepness * (0 - midpoint)
+             )
+         )
+
+        raw_at_large_breakpoint = 1 / (
+            1 + math.exp(
+                steepness * (1 - midpoint)
+            )
+        )
+
+        # Normalize the result so it is exactly 1 at the small
+        # breakpoint and exactly 0 at the large breakpoint.
+        premium_fraction = (
+            raw_value - raw_at_large_breakpoint
+        ) / (
+            raw_at_small_breakpoint
+            - raw_at_large_breakpoint
+        )
+
+        return large_rent + rent_difference * premium_fraction
+    else:
+        raise ValueError(f"Unknown scale function: {scale_function}")
 
 
 def calculate_inner_grid(

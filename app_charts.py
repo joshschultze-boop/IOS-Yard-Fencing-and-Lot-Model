@@ -42,10 +42,11 @@ def rent_curve_figure(rent_inputs):
     small_rent = rent_inputs["small_yard_rent_per_acre"]
     large_size = rent_inputs["large_yard_breakpoint_acres"]
     large_rent = rent_inputs["large_yard_rent_per_acre"]
+    scale_function = rent_inputs["scale_function"]
 
     display_max_acres = max(large_size * 1.20, large_size + 0.25)
     yard_sizes = np.linspace(0.0, display_max_acres, 400)
-    assigned_rents = [rent_per_acre(size, rent_inputs) for size in yard_sizes]
+    assigned_rents = [rent_per_acre(size, rent_inputs, scale_function=scale_function) for size in yard_sizes]
 
     figure, axis = plt.subplots(figsize=(10, 4.5))
 
@@ -120,41 +121,118 @@ def rent_curve_figure(rent_inputs):
 
     return figure
 
+import plotly.express as px
+
 
 def scenario_scatter_figure(results, metric_name):
-    """Compare inner-yard area with one selected financial metric."""
-    figure, axis = plt.subplots(figsize=(10, 5.5))
+    """Create an interactive scenario scatterplot."""
 
-    # A sample keeps the browser responsive when the grid has tens of
-    # thousands of valid cases.  The fixed random_state makes it repeatable.
     plot_data = results
+
     if len(plot_data) > 12_000:
-        plot_data = plot_data.sample(12_000, random_state=42)
-
-    for fill_type in ["full", "line", "cross"]:
-        fill_rows = plot_data[plot_data["fill_type"] == fill_type]
-        if fill_rows.empty:
-            continue
-
-        point_sizes = 12 + fill_rows["outer_yard_count"] * 2
-        axis.scatter(
-            fill_rows["inner_yard_area_acres"],
-            fill_rows[metric_name],
-            s=point_sizes,
-            alpha=0.30,
-            color=FILL_COLORS[fill_type],
-            label=fill_type.title(),
-            edgecolors="none",
+        plot_data = plot_data.sample(
+            12_000,
+            random_state=42,
         )
 
     metric_label = METRIC_LABELS[metric_name]
-    axis.set_title(f"{metric_label} vs. Inner-Yard Area")
-    axis.set_xlabel("Average inner-yard area (acres)")
-    axis.set_ylabel(metric_label)
-    format_metric_axis(axis, metric_name)
-    axis.grid(alpha=0.2)
-    axis.legend(title="Fill type", frameon=False)
-    figure.tight_layout()
+
+    figure = px.scatter(
+        plot_data,
+        x="inner_yard_area_acres",
+        y=metric_name,
+        color="fill_type",
+        size="outer_yard_count",
+        size_max=18,
+        opacity=0.45,
+        render_mode="webgl",
+        color_discrete_map=FILL_COLORS,
+        category_orders={
+            "fill_type": ["full", "line", "cross"],
+        },
+        labels={
+            "inner_yard_area_acres": (
+                "Actual inner-yard size (acres)"
+            ),
+            metric_name: metric_label,
+            "fill_type": "Fill type",
+            "outer_yard_count": "Outer yards",
+            "outer_depth_ft": "Outer depth (ft)",
+            "target_inner_yard_size_sf": (
+                "Target inner-yard size (sf)"
+            ),
+        },
+        hover_data={
+            "inner_yard_area_acres": ":.3f",
+            metric_name: ":,.0f",
+            "outer_yard_count": True,
+            "outer_depth_ft": ":,.0f",
+            "target_inner_yard_size_sf": ":,.0f",
+        },
+        title=f"{metric_label} vs. Inner-Yard Area",
+    )
+
+    figure.update_layout(
+        height=800,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        font=dict(color="black"),
+        title_font=dict(color="black"),
+        legend=dict(
+            title=dict(
+                text="Fill type",
+                font=dict(color="black"),
+            ),
+            font=dict(color="black"),
+            bgcolor="rgba(255, 255, 255, 0.90)",
+            bordercolor="#D9D9D9",
+            borderwidth=1,
+        ),
+        hovermode="closest",
+    )
+
+    # Plotly uses the raw fill-type values as legend labels.
+    # Capitalize them so the legend reads Full, Line, and Cross.
+    for trace in figure.data:
+        trace.name = trace.name.title()
+
+    figure.update_traces(
+        marker=dict(
+            line=dict(
+                color="black",
+                width=0.8,
+            )
+        )
+    )
+
+    figure.update_xaxes(
+        gridcolor="#D9D9D9",
+        zerolinecolor="#A0A0A0",
+        title_font=dict(color="black"),
+        tickfont=dict(color="black"),
+    )
+
+    figure.update_yaxes(
+        gridcolor="#D9D9D9",
+        zerolinecolor="#A0A0A0",
+        title_font=dict(color="black"),
+        tickfont=dict(color="black"),
+    )
+
+    if metric_name in [
+        "net_improvement",
+        "total_monthly_rent",
+        "total_development_cost",
+    ]:
+        figure.update_yaxes(
+            tickprefix="$",
+            tickformat=",",
+        )
+
+    elif metric_name == "leasable_coverage":
+        figure.update_yaxes(
+            tickformat=".1%",
+        )
 
     return figure
 

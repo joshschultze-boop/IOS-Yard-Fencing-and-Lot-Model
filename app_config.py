@@ -44,26 +44,26 @@ DEFAULT_INPUTS = {
     },
     "irregular_yards": [
         {
-            "yard_name": "Top Yard",
-            "area_acres": 1.4809917355,
-            "perimeter_ft": 1_084.480888,
+            "yard_name": "Extra Yard",
+            "area_acres": 1,
+            "perimeter_ft": 834.84,
             "gate_count": 1,
             "gate_length_ft": 24.0,
             "rent_per_acre_override": 0.0,
             "include_in_financials": True,
-            "notes": "Off-map irregular yard from the notebook geometry.",
+            "notes": "Off-map irregular yard.",
         }
     ],
     "scenario_grid": {
         "fill_types": ["full", "line", "cross"],
         "inner_yard_size_min_sf": 5_000,
         "inner_yard_size_max_sf": 11_000,
-        "inner_yard_size_step_sf": 500,
+        "inner_yard_size_step_sf": 250,
         "outer_depth_min_ft": 85,
         "outer_depth_max_ft": 300,
-        "outer_depth_step_ft": 5,
+        "outer_depth_step_ft": 25,
         "outer_yard_count_min": 1,
-        "outer_yard_count_max": 29,
+        "outer_yard_count_max": 10,
         "outer_yard_count_step": 1,
     },
 }
@@ -75,7 +75,7 @@ def copy_default_inputs():
 
 
 def slanted_side_adjustment(site_inputs):
-    """Calculate the notebook's added perimeter allowance as a decimal rate."""
+    """Calculate the net added perimeter allowance as a decimal rate."""
     lot_width = site_inputs["lot_width_ft"]
     lot_height = site_inputs["lot_height_ft"]
     slanted_side = site_inputs["slanted_side_length_ft"]
