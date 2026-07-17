@@ -50,7 +50,7 @@ def main():
     column_1.metric("Outer yards", results["outer_yard_count"])
     column_2.metric("Inner yards", results["inner_yard_count"])
     column_3.metric(
-        "Average inner-yard area",
+        "Actual inner-yard size",
         f"{results['inner_yard_area_acres']:.3f} acres",
     )
     column_4.metric("Leasable coverage", f"{results['leasable_coverage']:.1%}")
@@ -97,7 +97,7 @@ def main():
         st.write(f"**Usable inner height:** {inner['usable_height_ft']:,.1f} ft")
         st.write(f"**Inner yards:** {inner['yard_count']:,}")
         st.write(
-            f"**Average inner-yard area:** {inner['average_yard_area_sf']:,.0f} sf"
+            f"**Actual inner-yard size:** {inner['average_yard_area_sf']:,.0f} sf"
         )
 
 

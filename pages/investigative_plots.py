@@ -153,8 +153,11 @@ def main():
 
     st.subheader("All valid scenarios")
     scatter = scenario_scatter_figure(results, metric_name)
-    st.pyplot(scatter, width="stretch")
-    plt.close(scatter)
+    st.plotly_chart(
+        scatter,
+        width="stretch",
+        theme=None,
+    )
     st.caption("Point size represents the number of outer yards.")
 
     st.subheader("Outer-depth comparison")
