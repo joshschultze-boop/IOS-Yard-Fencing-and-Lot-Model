@@ -551,7 +551,7 @@ def main():
     """Render the page and save one complete input dictionary."""
     st.set_page_config(page_title="Yard Model Inputs", page_icon="📐", layout="wide")
 
-    st.title("Union Pacific Yard Model")
+    st.title("Yard Fencing Model")
     st.caption(
         "Enter the assumptions once, save them, and use the two pages in the sidebar."
     )
